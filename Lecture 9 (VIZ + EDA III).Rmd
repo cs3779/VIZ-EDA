@@ -65,9 +65,91 @@ weather_df %>%
     count(name, month)
 ```
 
+# Making a nice table
+```{r}
+weather_df %>% 
+  count(name) %>% 
+  knitr::kable()
+```
+
+
+# 2x2 Tables
+## _case_when_ to create a new variable based on other variables
+```{r}
+'weather_df %>% 
+  filter(name != "Waikiki, HA") %>% 
+  mutate(
+    cold = case_when(
+      tmax < 5 ~ "Cold",
+      tmax >= 5 ~ "Not Cold",
+      TRUE     ~ ""
+    )
+  ) %>% 
+  group_by(name, cold) %>% 
+  count() %>% 
+  pivot_wider(
+    names_from = cold,
+    values_from = n
+  )'
+
+# OR #
+
+weather_df %>% 
+  filter(name != "Waikiki, HA") %>% 
+  mutate(
+    cold = case_when(
+      tmax < 5 ~ "Cold",
+      tmax >= 5 ~ "Not Cold",
+      TRUE     ~ ""
+    )
+  )
+```
+
+
+# General Summaries
+```{r}
+weather_df %>% 
+    group_by(name, month) %>% 
+    summarize(
+      n = n(),
+      mean_tmax = mean(tmax, na.rm=TRUE),
+      sd_tmax = sd(tmax, na.rm=TRUE),
+      median_prcp = median(prcp, na.rm=TRUE)
+    ) %>% 
+  ggplot(aes(x=month, y=mean_tmax, color=name)) +
+    geom_point() + geom_line()
+```
+Excludes Waikiki because it contains missing values for tmax/prcp
+Therefore, R will not calculate anything for that grouping.
+_na.rm=TRUE_ excludes N/A values from your calculations
+
 
 ```{r}
-
+weather_df %>% 
+    group_by(name, month) %>% 
+    summarize(mean_tmax = mean(tmax)) %>% 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax) %>% 
+  knitr::kable(digits=1)
 ```
+
+
+# Grouped _mutate_
+```{r}
+weather_df %>% 
+    group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm=TRUE),
+    center_tmax = tmax - mean_tmax
+  ) %>% 
+  ggplot(aes(x=date, y=center_tmax, color=name)) + 
+    geom_point()
+```
+
+
+
+
+
 
 
